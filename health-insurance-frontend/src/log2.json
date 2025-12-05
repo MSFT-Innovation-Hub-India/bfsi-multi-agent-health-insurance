@@ -1,0 +1,78 @@
+{
+  "report_type": "Comprehensive Fraud Detection Analysis with Genuine Logs",
+  "generated_at": "2025-09-25T14:05:48.912330",
+  "patient_details": {
+    "claim_id": "CLM010-2025-AHSAN",
+    "patient_name": "Ahsan R",
+    "policy_number": "POL998877665",
+    "claim_amount": 323823.0,
+    "claim_date": "2025-09-19",
+    "diagnosis": "Severe Pneumonia with Post-Infectious Bronchitis",
+    "treatment_type": "Antibiotic therapy, respiratory physiotherapy, and 5-day hospitalization",
+    "hospital_name": "Columbia Asia Hospital, Hyderabad",
+    "documents_available": [
+      "medical_records",
+      "lab_reports",
+      "bills",
+      "discharge_summary"
+    ],
+    "policy_coverage_limit": 1000000.0,
+    "previously_claimed_amount": 826007.0,
+    "available_balance": 173993.0,
+    "policy_year": "2025-2026"
+  },
+  "fraud_analysis_results": {
+    "claim_id": "CLM010-2025-AHSAN",
+    "patient_name": "Ahsan R",
+    "processing_type": "Comprehensive Fraud Detection Analysis",
+    "processing_time": 61.430211,
+    "azure_evidence": {
+      "medical": "Medical evaluation confirms the diagnosis of **Severe Pneumonia with Post-Infectious Bronchitis**. The patient was admitted for 5 days, received IV antibiotics (Piperacillin-Tazobactam, Azithromycin), chest physiotherapy, and oxygen inhalation. Discharge summary notes gradual improvement and resolution of respiratory distress. Documentation consistency verified.",
+      "billing": "Itemized billing for claim CLM010-2025-AHSAN:\n\n- Room & Nursing Charges: ₹65,000\n- Medications & Consumables: ₹95,000\n- Diagnostic Tests & Imaging: ₹18,500\n- Specialist & Physician Charges: ₹45,000\n- Oxygen & Respiratory Support: ₹52,000\n- Post-Discharge Consultation & Therapy: ₹48,323\n\n**Total Claimed:** ₹3,23,823\n\nAll charges align with standard treatment costs for a short-term pneumonia admission. No duplication or inflation detected.",
+      "lab_reports": "Lab reports show elevated CRP (112 mg/L) and chest X-ray findings consistent with bronchial thickening and patchy infiltrates. All lab and imaging files are valid, timestamped, and consistent with hospital records.",
+      "policy": "Policy verification for POL998877665:\n\n- Policy Validity: Active and within claim period\n- Coverage Limit: ₹10,00,000 per policy year\n- Previously Claimed: ₹8,26,007\n- Available Balance: ₹1,73,993\n- Current Claim: ₹3,23,823\n- Exceedance: ₹1,49,830\n\nConclusion: The claim exceeds available balance but remains within total coverage limit (fully utilized)."
+    },
+    "fraud_orchestration": {
+      "status": "completed",
+      "framework": "AutoGen Fraud Detection GroupChat with Genuine Case Review",
+      "orchestration_result": "**FRAUD ASSESSMENT: PASS (NO FRAUD DETECTED)**  \n**FINAL DECISION: REJECTED (POLICY LIMIT EXCEEDED)**  \n**CLAIMED AMOUNT:** ₹3,23,823  \n**AVAILABLE BALANCE:** ₹1,73,993  \n**EXCESS AMOUNT:** ₹1,49,830  \n**FRAUD RISK LEVEL:** LOW  \n**REJECTION REASON:** Claim exceeds remaining policy balance, though medically valid and genuine.",
+      "total_messages": 5,
+      "agents_participated": 5,
+      "conversation_duration": 29.61402,
+      "fraud_decision": {
+        "decision": "REJECTED",
+        "approved_amount": "₹0",
+        "fraud_risk_level": "LOW",
+        "balance_status": "INSUFFICIENT",
+        "remaining_balance": "₹1,73,993.00",
+        "policy_utilization": "100%",
+        "fraud_indicators": [],
+        "rationale": "Claim is genuine and medically valid. Rejected only due to exceeding available coverage balance.",
+        "conversation_length": 5,
+        "decision_source": "AutoGen Decision_Coordinator"
+      },
+      "detailed_messages": [
+        "{'content': '**FRAUD DETECTION ANALYSIS FOR CLAIM CLM010-2025-AHSAN**\\n---\\n### **FRAUD_RISK: LOW**\\n- Patient identity verified.\\n- Documentation authentic.\\n- Hospital registered and genuine.\\n- Billing matches diagnosis.\\nRecommendation: Proceed to medical validator.', 'role': 'user', 'name': 'Fraud_Detection_Specialist'}",
+        "{'content': '### **MEDICAL_VALIDATION SUMMARY**\\n- Diagnosis: Severe Pneumonia with Post-Infectious Bronchitis.\\n- Treatment: Antibiotic therapy, oxygen support, respiratory physiotherapy.\\n- Duration: 5 days inpatient.\\n- Authenticity: Verified genuine.\\nConclusion: Medical evidence valid, proceed for financial eligibility check.', 'role': 'user', 'name': 'Medical_Validator'}",
+        "{'content': '### **BILLING VALIDATION**\\n- Total Billed: ₹3,23,823\\n- Bill items are consistent and realistic.\\n- No duplicates or altered entries.\\nConclusion: Billing authentic.', 'role': 'user', 'name': 'Billing_Validator'}",
+        "{'content': '### **POLICY BALANCE ANALYSIS**\\n- Total Coverage: ₹10,00,000\\n- Previously Claimed: ₹8,26,007\\n- Available Balance: ₹1,73,993\\n- Current Claim: ₹3,23,823\\n- Exceedance: ₹1,49,830\\nConclusion: Claim exceeds available balance. Not eligible under remaining funds.', 'role': 'user', 'name': 'Policy_Balance_Validator'}",
+        "{'content': '**FINAL DECISION SUMMARY**\\n- Fraud Level: LOW (authentic claim).\\n- Policy Compliance: FAILED (Limit exceeded).\\n- Final Decision: REJECTED.\\n- Reason: Available balance insufficient, though genuine medical claim.', 'role': 'user', 'name': 'Decision_Coordinator'}"
+      ]
+    },
+    "system_status": {
+      "azure_ai_available": true,
+      "lab_report_api_available": true,
+      "autogen_framework": "Fraud Detection GroupChat",
+      "fraud_detection_enabled": true,
+      "comprehensive_validation": true
+    },
+    "timestamp": "2025-09-25T14:05:48.911230"
+  },
+  "fraud_detection_capabilities": {
+    "identity_verification": true,
+    "medical_consistency_check": true,
+    "billing_validation": true,
+    "policy_limit_validation": true,
+    "documentation_integrity": true
+  }
+}

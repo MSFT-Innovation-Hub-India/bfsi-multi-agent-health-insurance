@@ -1,0 +1,297 @@
+{
+  "totalCustomers": 16,
+  "totalClaims": 15,
+  "totalClaimValue": 4123823.00,
+  "patients": [
+    {
+      "id": "PAT001",
+      "name": "Lakshmisrinivas T",
+      "age": 64,
+      "policyNumber": "POL789456123",
+      "claimCount": 1,
+      "totalClaimValue": 396591.0,
+      "riskLevel": "LOW",
+      "activePolicy": true,
+      "lastClaimDate": "2024-09-16"
+    },
+    {
+      "id": "PAT016",
+      "name": "Ahsan R",
+      "age": 42,
+      "policyNumber": "POL998877665",
+      "claimCount": 4,
+      "totalClaimValue": 1149830.0,
+      "riskLevel": "HIGH",
+      "activePolicy": true,
+      "lastClaimDate": "2025-09-19"
+    },
+    {
+      "id": "PAT002",
+      "name": "Priya Sharma",
+      "age": 34,
+      "policyNumber": "POL445623789",
+      "claimCount": 1,
+      "totalClaimValue": 125000.0,
+      "riskLevel": "LOW",
+      "activePolicy": true,
+      "lastClaimDate": "2024-08-22"
+    },
+    {
+      "id": "PAT003",
+      "name": "Rajesh Kumar",
+      "age": 45,
+      "policyNumber": "POL987654321",
+      "claimCount": 5,
+      "totalClaimValue": 2150000.0,
+      "riskLevel": "HIGH",
+      "activePolicy": true,
+      "lastClaimDate": "2024-09-20"
+    },
+    {
+      "id": "PAT004",
+      "name": "Anita Desai",
+      "age": 62,
+      "policyNumber": "POL123789456",
+      "claimCount": 2,
+      "totalClaimValue": 475000.0,
+      "riskLevel": "MEDIUM",
+      "activePolicy": true,
+      "lastClaimDate": "2024-07-15"
+    },
+    {
+      "id": "PAT005",
+      "name": "Vikram Singh",
+      "age": 29,
+      "policyNumber": "POL564789123",
+      "claimCount": 1,
+      "totalClaimValue": 85000.0,
+      "riskLevel": "LOW",
+      "activePolicy": true,
+      "lastClaimDate": "2024-09-10"
+    },
+    {
+      "id": "PAT006",
+      "name": "Sunita Patel",
+      "age": 41,
+      "policyNumber": "POL456123789",
+      "claimCount": 2,
+      "totalClaimValue": 320000.0,
+      "riskLevel": "LOW",
+      "activePolicy": true,
+      "lastClaimDate": "2024-09-18"
+    },
+    {
+      "id": "PAT007",
+      "name": "Ravi Agarwal",
+      "age": 55,
+      "policyNumber": "POL789123456",
+      "claimCount": 4,
+      "totalClaimValue": 675000.0,
+      "riskLevel": "MEDIUM",
+      "activePolicy": true,
+      "lastClaimDate": "2024-09-12"
+    },
+    {
+      "id": "PAT008",
+      "name": "Deepika Reddy",
+      "age": 28,
+      "policyNumber": "POL654321987",
+      "claimCount": 1,
+      "totalClaimValue": 95000.0,
+      "riskLevel": "LOW",
+      "activePolicy": true,
+      "lastClaimDate": "2024-08-30"
+    },
+    {
+      "id": "PAT009",
+      "name": "Amit Gupta",
+      "age": 47,
+      "policyNumber": "POL321654987",
+      "claimCount": 6,
+      "totalClaimValue": 1450000.0,
+      "riskLevel": "HIGH",
+      "activePolicy": true,
+      "lastClaimDate": "2024-09-22"
+    },
+    {
+      "id": "PAT010",
+      "name": "Kavya Menon",
+      "age": 36,
+      "policyNumber": "POL147258369",
+      "claimCount": 2,
+      "totalClaimValue": 280000.0,
+      "riskLevel": "LOW",
+      "activePolicy": true,
+      "lastClaimDate": "2024-09-08"
+    },
+    {
+      "id": "PAT011",
+      "name": "Sanjay Chopra",
+      "age": 52,
+      "policyNumber": "POL369258147",
+      "claimCount": 3,
+      "totalClaimValue": 545000.0,
+      "riskLevel": "MEDIUM",
+      "activePolicy": true,
+      "lastClaimDate": "2024-09-14"
+    },
+    {
+      "id": "PAT012",
+      "name": "Neha Joshi",
+      "age": 31,
+      "policyNumber": "POL852741963",
+      "claimCount": 1,
+      "totalClaimValue": 115000.0,
+      "riskLevel": "LOW",
+      "activePolicy": true,
+      "lastClaimDate": "2024-08-25"
+    },
+    {
+      "id": "PAT013",
+      "name": "Arjun Rao",
+      "age": 43,
+      "policyNumber": "POL963852741",
+      "claimCount": 7,
+      "totalClaimValue": 1850000.0,
+      "riskLevel": "HIGH",
+      "activePolicy": false,
+      "lastClaimDate": "2024-09-19"
+    },
+    {
+      "id": "PAT014",
+      "name": "Pooja Nair",
+      "age": 38,
+      "policyNumber": "POL741852963",
+      "claimCount": 2,
+      "totalClaimValue": 195000.0,
+      "riskLevel": "LOW",
+      "activePolicy": true,
+      "lastClaimDate": "2024-09-11"
+    },
+    {
+      "id": "PAT015",
+      "name": "Manish Verma",
+      "age": 49,
+      "policyNumber": "POL159753486",
+      "claimCount": 4,
+      "totalClaimValue": 780000.0,
+      "riskLevel": "MEDIUM",
+      "activePolicy": true,
+      "lastClaimDate": "2024-09-17"
+    }
+  ],
+  "claims": [
+    {
+      "id": "CLM001-2024-LAKSHMI",
+      "patientId": "PAT001",
+      "patientName": "Lakshmisrinivas T",
+      "claimAmount": 396591.0,
+      "status": "PROCESSING",
+      "submissionDate": "2024-09-16",
+      "processingTime": 0,
+      "agentsUsed": 0,
+      "riskScore": 12,
+      "fraudIndicators": []
+    },
+    {
+      "id": "CLM010-2025-AHSAN",
+      "patientId": "PAT016",
+      "patientName": "Ahsan R",
+      "claimAmount": 323823.0,
+      "status": "REJECTED",
+      "submissionDate": "2025-09-19",
+      "processingTime": 1.4,
+      "agentsUsed": 1,
+      "riskScore": 15,
+      "fraudIndicators": []
+    },
+    {
+      "id": "CLM002-2024-PRIYA",
+      "patientId": "PAT002",
+      "patientName": "Priya Sharma",
+      "claimAmount": 125000.0,
+      "status": "ACCEPTED",
+      "submissionDate": "2024-08-22",
+      "processingTime": 45.2,
+      "agentsUsed": 3,
+      "riskScore": 8,
+      "fraudIndicators": []
+    },
+    {
+      "id": "CLM003-2024-RAJESH",
+      "patientId": "PAT003",
+      "patientName": "Rajesh Kumar",
+      "claimAmount": 850000.0,
+      "status": "REJECTED",
+      "submissionDate": "2024-09-20",
+      "processingTime": 156.7,
+      "agentsUsed": 6,
+      "riskScore": 89,
+      "fraudIndicators": ["Multiple recent claims", "High claim amount", "Inconsistent documentation"]
+    },
+    {
+      "id": "CLM004-2024-ANITA",
+      "patientId": "PAT004",
+      "patientName": "Anita Desai",
+      "claimAmount": 275000.0,
+      "status": "PROCESSING",
+      "submissionDate": "2024-09-24",
+      "processingTime": 24.1,
+      "agentsUsed": 4,
+      "riskScore": 34,
+      "fraudIndicators": ["Unusual billing pattern"]
+    },
+    {
+      "id": "CLM005-2024-VIKRAM",
+      "patientId": "PAT005",
+      "patientName": "Vikram Singh",
+      "claimAmount": 85000.0,
+      "status": "PROCESSING",
+      "submissionDate": "2024-09-23",
+      "processingTime": 18.5,
+      "agentsUsed": 2,
+      "riskScore": 15,
+      "fraudIndicators": []
+    }
+  ],
+  "agentMetrics": {
+    "totalAgents": 6,
+    "averageAgentsPerClaim": 4,
+    "agentUsageDistribution": {
+      "Fraud_Detection_Specialist": 8,
+      "Diagnostic_Validator": 12,
+      "Billing_Fraud_Validator": 10,
+      "Policy_Balance_Validator": 8,
+      "Policy_Adjustment_Coordinator": 8,
+      "Decision_Coordinator": 3
+    },
+    "mostActiveAgent": "Diagnostic_Validator"
+  },
+  "claimAnalysis": {
+    "byStatus": {
+      "accepted": {
+        "count": 8,
+        "totalValue": 378400000.00,
+        "averageValue": 131256.94,
+        "averageAgents": 4
+      },
+      "rejected": {
+        "count": 4,
+        "totalValue": 816000.00,
+        "averageValue": 132467.53,
+        "averageAgents": 6
+      },
+      "processing": {
+        "count": 2,
+        "totalValue": 0.00,
+        "averageValue": 0.00,
+        "averageAgents": 0.0
+      }
+    },
+    "processingMetrics": {
+      "averageProcessingTime": 67.4,
+      "fastestClaim": 12.3,
+      "slowestClaim": 234.7
+    }
+  }
+}

@@ -1,0 +1,25 @@
+# Azure AI and Project dependencies
+azure-ai-projects>=1.0.0
+azure-identity>=1.15.0
+azure-cosmos>=4.5.0
+azure-storage-blob>=12.19.0
+
+# AutoGen Multi-Agent Framework
+pyautogen>=0.2.0
+openai>=1.0.0
+
+# Core Python dependencies
+python-dotenv>=1.0.0
+requests>=2.31.0
+typing-extensions>=4.8.0
+
+# Data processing and utilities
+dataclasses-json>=0.6.0
+
+# Async processing
+asyncio
+aiohttp>=3.8.0
+
+# Optional: For enhanced functionality
+numpy>=1.24.0
+pillow>=10.0.0  # For image processing if needed

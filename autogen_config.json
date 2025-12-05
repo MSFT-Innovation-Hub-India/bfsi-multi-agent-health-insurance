@@ -1,0 +1,161 @@
+{
+  "autogen_config": {
+    "framework": "AutoGen Multi-Agent Orchestration",
+    "version": "0.2.0",
+    "description": "Configuration for health insurance claim processing using AutoGen framework",
+    
+    "llm_config": {
+      "model": "gpt-4o",
+      "temperature": 0.3,
+      "timeout": 120,
+      "max_tokens": 2000,
+      "presence_penalty": 0.1,
+      "frequency_penalty": 0.1
+    },
+    
+    "agent_config": {
+      "max_consecutive_auto_reply": 3,
+      "human_input_mode": "NEVER",
+      "code_execution_config": false,
+      "system_message_template": "You are a specialized {role} in a health insurance claim processing team. Work collaboratively with other agents to provide comprehensive analysis."
+    },
+    
+    "group_chat_config": {
+      "max_round": 12,
+      "speaker_selection_method": "round_robin",
+      "allow_repeat_speaker": true,
+      "admin_name": "ClaimCoordinator",
+      "workflow_order": [
+        "ClaimProcessor",
+        "MedicalSpecialist", 
+        "ExclusionsSpecialist",
+        "ImagingSpecialist",
+        "BillingSpecialist",
+        "ClaimCoordinator"
+      ]
+    },
+    
+    "workflow_rules": {
+      "medical_analysis_required": true,
+      "exclusions_check_required": true,
+      "imaging_analysis_conditional": "x-ray|imaging|mri|ct_scan",
+      "billing_calculation_required": true,
+      "final_coordination_required": true,
+      
+      "approval_criteria": {
+        "medical_necessity_validated": true,
+        "no_exclusions_apply": true,
+        "documentation_complete": true,
+        "within_policy_limits": true
+      },
+      
+      "rejection_criteria": {
+        "exclusions_apply": true,
+        "medical_necessity_not_established": true,
+        "documentation_insufficient": true,
+        "exceeds_policy_limits": true
+      }
+    },
+    
+    "agent_specializations": {
+      "MedicalSpecialist": {
+        "domain": "Medical Records Analysis",
+        "responsibilities": [
+          "Validate medical necessity",
+          "Review treatment appropriateness",
+          "Assess clinical documentation",
+          "Check medical coding accuracy",
+          "Evaluate pre-existing conditions"
+        ],
+        "output_format": "structured_medical_analysis"
+      },
+      
+      "BillingSpecialist": {
+        "domain": "Financial Analysis and Settlement",
+        "responsibilities": [
+          "Calculate settlement amounts",
+          "Apply policy deductibles and co-pays",
+          "Review room rent limits",
+          "Assess network vs non-network charges",
+          "Validate billing compliance"
+        ],
+        "output_format": "itemized_financial_breakdown"
+      },
+      
+      "ExclusionsSpecialist": {
+        "domain": "Policy Coverage and Exclusions",
+        "responsibilities": [
+          "Identify applicable exclusions",
+          "Check waiting periods",
+          "Review coverage limitations",
+          "Assess policy compliance",
+          "Validate coverage eligibility"
+        ],
+        "output_format": "exclusions_coverage_report"
+      },
+      
+      "ImagingSpecialist": {
+        "domain": "Medical Imaging Analysis", 
+        "responsibilities": [
+          "Interpret X-ray and imaging results",
+          "Correlate imaging with treatment claims",
+          "Assess imaging-based medical necessity",
+          "Validate diagnostic accuracy",
+          "Grade severity levels"
+        ],
+        "output_format": "imaging_clinical_correlation"
+      },
+      
+      "ClaimCoordinator": {
+        "domain": "Final Decision Making",
+        "responsibilities": [
+          "Synthesize all agent analyses",
+          "Make final approval decisions",
+          "Calculate approved amounts",
+          "Generate comprehensive reports",
+          "Coordinate workflow completion"
+        ],
+        "output_format": "final_decision_report"
+      }
+    },
+    
+    "integration_settings": {
+      "azure_ai_projects": {
+        "endpoint": "${AZURE_ENDPOINT}",
+        "resource_group": "${AZURE_RESOURCE_GROUP}",
+        "subscription_id": "${AZURE_SUBSCRIPTION_ID}",
+        "project_name": "${AZURE_PROJECT_NAME}"
+      },
+      
+      "search_indices": {
+        "billing": "${AZURE_SEARCH_BILLING_INDEX}",
+        "medical_records": "${AZURE_SEARCH_MEDICAL_INDEX}", 
+        "exclusions": "${AZURE_SEARCH_EXCLUSIONS_INDEX}",
+        "general": "${AZURE_SEARCH_BILLING_INDEX}"
+      },
+      
+      "xray_analysis": {
+        "enabled": true,
+        "api_endpoint": "${CUSTOM_VISION_ENDPOINT}",
+        "project_id": "${CUSTOM_VISION_PROJECT_ID}",
+        "iteration_name": "${CUSTOM_VISION_ITERATION_NAME}"
+      }
+    },
+    
+    "performance_settings": {
+      "concurrent_claims_limit": 3,
+      "timeout_per_claim_seconds": 300,
+      "retry_attempts": 2,
+      "cache_enabled": true,
+      "logging_level": "INFO"
+    },
+    
+    "output_settings": {
+      "save_processing_history": true,
+      "detailed_agent_logs": true,
+      "export_format": "json",
+      "include_timestamps": true,
+      "include_performance_metrics": true
+    }
+  }
+}
