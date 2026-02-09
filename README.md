@@ -225,27 +225,6 @@ This project includes production-ready Docker images and deployment scripts for 
 - An **Azure Container Apps Environment**
 - Azure services provisioned: Azure AI Search, Azure Cosmos DB, Azure Blob Storage, Azure OpenAI
 
-### Architecture
-
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                    Azure Container Apps Environment                  │
-│                                                                      │
-│  ┌──────────────────────────┐    ┌──────────────────────────┐       │
-│  │  healthclaims-frontend   │    │    healthclaims-api       │       │
-│  │  (Nginx + React SPA)     │───▶│    (FastAPI + AutoGen)    │       │
-│  │  Port 80 · 0.25 vCPU     │    │    Port 8000 · 0.5 vCPU   │       │
-│  └──────────────────────────┘    └────────────┬─────────────┘       │
-│                                                │ Managed Identity    │
-│                                   ┌────────────┼────────────┐       │
-│                                   ▼            ▼            ▼       │
-│                            ┌──────────┐ ┌──────────┐ ┌──────────┐  │
-│                            │ Azure AI │ │ Cosmos   │ │  Blob    │  │
-│                            │ Search   │ │ DB       │ │ Storage  │  │
-│                            └──────────┘ └──────────┘ └──────────┘  │
-└──────────────────────────────────────────────────────────────────────┘
-```
-
 ### Docker Images
 
 | Image | Dockerfile | Description |
@@ -365,8 +344,6 @@ After deployment you will have:
 - **Backend API**: `https://healthclaims-api.<region>.azurecontainerapps.io`
 - **API Docs (Swagger)**: `https://healthclaims-api.<region>.azurecontainerapps.io/docs`
 
-> **Tip:** The deployment scripts (`deploy-containerapp.ps1` / `.sh`) automate all of the above steps. Copy the template, fill in your resource names, and run.
-
 ## 🔧 Technologies
 
 | Component | Technology |
@@ -383,125 +360,6 @@ After deployment you will have:
 | **Frontend** | React 19, TypeScript, Vite |
 | **Styling** | TailwindCSS |
 | **Animation** | Framer Motion |
-
-## 📝 Usage Examples
-
-### Using the Fraud Detection Orchestrator
-
-```python
-from orchestrator import FraudDetectionOrchestrator
-import asyncio
-
-async def main():
-    # Initialize the orchestrator
-    orchestrator = FraudDetectionOrchestrator(
-        enable_xray=True,
-        enable_azure_evidence=True
-    )
-    
-    # Process a claim
-    results = await orchestrator.process_claim()
-    
-    # Get the decision
-    decision = results['fraud_orchestration']['fraud_decision']['decision']
-    print(f"Decision: {decision}")
-
-asyncio.run(main())
-```
-
-### Using the Health Insurance Claim System
-
-```python
-from run_fraud_detection import HealthInsuranceClaimSystem
-import asyncio
-
-async def main():
-    # Initialize the system
-    system = HealthInsuranceClaimSystem(enable_fraud_detection=True)
-    
-    # Define claim data
-    claim_data = {
-        "claim_id": "CLM001",
-        "patient_name": "John Doe",
-        "policy_number": "POL123456789",
-        "claim_amount": 75000.00,
-        "claim_date": "2024-09-15",
-        "diagnosis": "Knee Osteoarthritis",
-        "treatment_type": "Total Knee Replacement",
-        "hospital_name": "Apollo Hospital",
-        "documents_available": ["medical_records", "x-ray", "bills"],
-        "policy_coverage_limit": 500000.00,
-        "available_balance": 450000.00
-    }
-    
-    # Process the claim
-    result = await system.process_claim_with_fraud_detection(claim_data)
-    
-    # Get summary
-    print(system.get_processing_summary())
-
-asyncio.run(main())
-```
-
-### Using the Workflow Manager
-
-```python
-from workflow_manager import HealthInsuranceWorkflowManager, ClaimData
-
-# Initialize manager
-manager = HealthInsuranceWorkflowManager()
-
-# Create claim data
-claim = ClaimData(
-    claim_id="CLM001",
-    patient_name="John Doe",
-    policy_number="POL123456789",
-    claim_amount=75000.00,
-    claim_date="2024-09-15",
-    diagnosis="Knee Osteoarthritis",
-    treatment_type="Total Knee Replacement",
-    hospital_name="Apollo Hospital",
-    documents_available=["medical_records", "x-ray", "bills"]
-)
-
-# Process claim
-result = manager.process_claim_with_workflow(claim)
-print(f"Status: {result.final_status.value}")
-print(f"Approved Amount: ₹{result.approved_amount:,.2f}")
-```
-
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      orchestrator.py                            │
-│                   (Main Entry Point)                            │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─────────────────────┐    ┌─────────────────────────────┐    │
-│  │       core/         │    │        services/            │    │
-│  │  ├── config.py      │    │  ├── agent_factory.py       │    │
-│  │  ├── models.py      │    │  ├── evidence_collector.py  │    │
-│  │  ├── prompts.py     │    │  ├── decision_extractor.py  │    │
-│  │  ├── queries.py     │    │  └── report_generator.py    │    │
-│  │  └── utils.py       │    │                             │    │
-│  └─────────────────────┘    └─────────────────────────────┘    │
-│                                                                 │
-├─────────────────────────────────────────────────────────────────┤
-│                    workflow_manager.py                          │
-│                 (Azure AI Integration)                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                      agents/                             │   │
-│  │  ├── xrayanalysis.py   (Azure Custom Vision)            │   │
-│  │  ├── bill.py           (Billing Analysis)               │   │
-│  │  ├── claim.py          (Claim Processing)               │   │
-│  │  └── patientsummary.py (Patient Summary)                │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
 
 
 ## 🧪 Testing
@@ -529,8 +387,6 @@ asyncio.run(HealthInsuranceClaimSystem().process_claim_with_fraud_detection())
 ## 📧 Contact
 
 For questions or support, please open an issue on GitHub.
-
----
 
 <p align="center">
   Built with ❤️ using Microsoft AutoGen, Azure AI, and React
