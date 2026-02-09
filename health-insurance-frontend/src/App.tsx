@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import InsurerDashboard from './InsurerDashboard';
 import { MultiAgentWorkflowPipeline } from './components/MultiAgentWorkflowPipeline';
 import { ClaimAnalysisPage } from './components/ClaimAnalysisPage';
+import { triggerProcessing } from './api/processingTrigger';
 
 function App() {
   const [currentView, setCurrentView] = useState<'dashboard' | 'workflow' | 'overview'>('dashboard');
@@ -16,6 +17,10 @@ function App() {
   const handleClaimClick = (claimId: string) => {
     setSelectedClaimId(claimId);
     setCurrentView('workflow');
+    
+    // Fire and forget - trigger processing API in background
+    // Frontend continues using static JSON for display
+    triggerProcessing(claimId);
   };
 
   const handleBackToDashboard = () => {

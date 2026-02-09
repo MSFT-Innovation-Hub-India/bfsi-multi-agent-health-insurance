@@ -28,7 +28,7 @@ ENDPOINT = os.getenv("AZURE_ENDPOINT", "https://eastus2.api.azureml.ms")
 RESOURCE_GROUP = os.getenv("AZURE_RESOURCE_GROUP", "")
 SUBSCRIPTION_ID = os.getenv("AZURE_SUBSCRIPTION_ID", "")
 PROJECT_NAME = os.getenv("AZURE_PROJECT_NAME", "")
-INDEX_NAME = os.getenv("AZURE_SEARCH_MEDICAL_INDEX", "clm001-folder3-index")
+INDEX_NAME = os.getenv("AZURE_SEARCH_MEDICAL_INDEX", "healthmedicalrecords")
 
 # Step 2: Connect to your Azure AI Project
 project_client = AIProjectClient(
@@ -38,7 +38,7 @@ project_client = AIProjectClient(
     project_name=PROJECT_NAME,
     credential=DefaultAzureCredential()
 )
-# Step 3: Connect to Azure AI Search (dataexc1)
+# Step 3: Connect to Azure AI Search (fsisearchindex)
 conn_list = project_client.connections.list()
 conn_id = ""
 
@@ -47,20 +47,20 @@ for conn in conn_list:
     if conn.connection_type == "CognitiveSearch":
         print(f"   - {conn.id}")
 
-# Try to find dataexc1 connection first
-print("🔍 Searching for dataexc1 connection...")
+# Try to find fsisearchindex connection first
+print("🔍 Searching for fsisearchindex connection...")
 for conn in conn_list:
-    if conn.connection_type == "CognitiveSearch" and "dataexc1" in conn.id.lower():
+    if conn.connection_type == "CognitiveSearch" and "fsisearchindex" in conn.id.lower():
         conn_id = conn.id
-        print(f"✅ Found dataexc1 connection: {conn_id}")
+        print(f"✅ Found fsisearchindex connection: {conn_id}")
         break
 
-# If not found, try dataexc
+# If not found, try fsi
 if not conn_id:
     for conn in conn_list:
-        if conn.connection_type == "CognitiveSearch" and "dataexc" in conn.id.lower():
+        if conn.connection_type == "CognitiveSearch" and "fsi" in conn.id.lower():
             conn_id = conn.id
-            print(f"✅ Found dataexc connection: {conn_id}")
+            print(f"✅ Found fsi connection: {conn_id}")
             break
 
 # Final fallback

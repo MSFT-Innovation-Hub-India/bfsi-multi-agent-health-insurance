@@ -6,6 +6,7 @@ from typing import Optional, Dict, Any, Union
 import base64
 from urllib.parse import urlparse
 from azure.storage.blob import BlobServiceClient
+from azure.identity import DefaultAzureCredential
 from dotenv import load_dotenv
 
 # Add parent directory to path for imports
@@ -37,11 +38,11 @@ class XRayPredictionAPI:
         self.iteration_name = os.getenv("CUSTOM_VISION_ITERATION_NAME", "Iteration4")
         self.prediction_key = os.getenv("CUSTOM_VISION_PREDICTION_KEY", "")
         
-        # Azure Storage configuration
-        self.storage_account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME", "")
-        self.storage_account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY", "")
+        # Azure Storage configuration (using Managed Identity)
+        self.storage_account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME", "fsidemo")
+        self.storage_account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY", "")  # Optional - Managed Identity preferred
         self.container_name = os.getenv("AZURE_STORAGE_CONTAINER_NAME", "health-insurance")
-        self.xray_path = os.getenv("AZURE_STORAGE_XRAY_PATH", "CLM001/xray")
+        self.xray_path = os.getenv("AZURE_STORAGE_XRAY_PATH", "xray")
     
     def _get_headers_for_url(self) -> Dict[str, str]:
         """Get headers for URL-based prediction"""
@@ -66,9 +67,15 @@ class XRayPredictionAPI:
         return f"{self.base_url}/{self.project_id}/classify/iterations/{self.iteration_name}/image"
     
     def get_blob_service_client(self):
-        """Create and return Azure Blob Service Client"""
+        """Create and return Azure Blob Service Client using Managed Identity"""
         account_url = f"https://{self.storage_account_name}.blob.core.windows.net"
-        return BlobServiceClient(account_url=account_url, credential=self.storage_account_key)
+        # Use Managed Identity (DefaultAzureCredential) instead of storage key
+        if self.storage_account_key:
+            # Fallback to key if provided
+            return BlobServiceClient(account_url=account_url, credential=self.storage_account_key)
+        else:
+            # Use Managed Identity
+            return BlobServiceClient(account_url=account_url, credential=DefaultAzureCredential())
     
     def list_xray_images(self):
         """List all X-ray images in the Azure Storage container"""

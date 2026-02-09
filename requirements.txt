@@ -20,6 +20,13 @@ dataclasses-json>=0.6.0
 asyncio
 aiohttp>=3.8.0
 
+# FastAPI and Web Server
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+sse-starlette>=1.8.0
+websockets>=12.0
+
 # Optional: For enhanced functionality
 numpy>=1.24.0
 pillow>=10.0.0  # For image processing if needed

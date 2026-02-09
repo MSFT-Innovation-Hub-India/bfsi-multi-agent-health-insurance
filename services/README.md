@@ -90,11 +90,11 @@ evidence = await collector.collect_evidence(claim_data)
 **Evidence Types:**
 | Type | Source |
 |------|--------|
-| Medical | `clm001-folder3-index` |
-| Billing | `clm001-folder1-index` |
+| Medical | `healthmedicalrecords` |
+| Billing | `healthbills` |
 | X-ray | Azure Custom Vision |
-| Policy | `clm001-folder3-index` |
-| Exclusions | `claims` index |
+| Policy | `healthmedicalrecords` |
+| Exclusions | `healthclaims` index |
 
 ### `report_generator.py`
 **Report Generation and Printing**

@@ -128,14 +128,14 @@ class HealthInsuranceWorkflowManager:
         """Find and return the Azure AI Search connection ID"""
         conn_list = self.project_client.connections.list()
         
-        # Try to find dataexc1 connection first
+        # Try to find fsisearchindex connection first
         for conn in conn_list:
-            if conn.connection_type == "CognitiveSearch" and "dataexc1" in conn.id.lower():
+            if conn.connection_type == "CognitiveSearch" and "fsisearchindex" in conn.id.lower():
                 return conn.id
         
-        # If not found, try dataexc
+        # If not found, try fsi
         for conn in conn_list:
-            if conn.connection_type == "CognitiveSearch" and "dataexc" in conn.id.lower():
+            if conn.connection_type == "CognitiveSearch" and "fsi" in conn.id.lower():
                 return conn.id
         
         # Final fallback
@@ -271,7 +271,7 @@ class HealthInsuranceWorkflowManager:
         start_time = datetime.now()
         
         # Create medical specialist agent
-        agent = self.create_specialist_agent("medical", "clm001-folder3-index")
+        agent = self.create_specialist_agent("medical", "healthmedicalrecords")
         self.agents["medical"] = agent
         
         # Create analysis query
@@ -331,7 +331,7 @@ class HealthInsuranceWorkflowManager:
         start_time = datetime.now()
         
         # Create exclusions specialist agent
-        agent = self.create_specialist_agent("exclusions", "claims")
+        agent = self.create_specialist_agent("exclusions", "healthclaims")
         self.agents["exclusions"] = agent
         
         # Create analysis query
@@ -432,7 +432,7 @@ class HealthInsuranceWorkflowManager:
         start_time = datetime.now()
         
         # Create billing specialist agent
-        agent = self.create_specialist_agent("billing", "clm001-folder1-index")
+        agent = self.create_specialist_agent("billing", "healthbills")
         self.agents["billing"] = agent
         
         # Create analysis query
@@ -493,7 +493,7 @@ class HealthInsuranceWorkflowManager:
         """Run final coordination and decision making"""
         
         # Create coordinator agent
-        agent = self.create_specialist_agent("coordinator", "clm001-folder1-index")
+        agent = self.create_specialist_agent("coordinator", "healthbills")
         self.agents["coordinator"] = agent
         
         # Summarize all agent findings

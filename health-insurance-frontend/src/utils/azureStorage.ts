@@ -1,5 +1,5 @@
 // Azure Storage configuration
-const STORAGE_ACCOUNT_NAME = 'dataexc';
+const STORAGE_ACCOUNT_NAME = 'fsidemo';
 const CONTAINER_NAME = 'healthinsurance';
 const BASE_URL = `https://${STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${CONTAINER_NAME}`;
 

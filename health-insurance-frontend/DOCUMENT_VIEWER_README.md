@@ -5,7 +5,7 @@ The Health Insurance Claims Dashboard now includes a PDF document viewer that al
 
 ## Azure Storage Configuration
 
-**Storage Account:** `dataexc`
+**Storage Account:** `fsidemo`
 **Container:** `healthinsurance`
 **Structure:** `/{claimId}/{filename}.pdf`
 
@@ -86,8 +86,8 @@ The system automatically categorizes documents based on filename:
 Credentials are currently hardcoded in `azureStorage.ts`. For production, move these to environment variables:
 
 ```env
-VITE_AZURE_STORAGE_ACCOUNT=dataexc
-VITE_AZURE_STORAGE_KEY=your-key-here
+VITE_AZURE_STORAGE_ACCOUNT=fsidemo
+VITE_AZURE_STORAGE_KEY=  # Not needed with Managed Identity or public access
 VITE_AZURE_STORAGE_CONTAINER=healthinsurance
 ```
 

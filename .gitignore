@@ -2,6 +2,13 @@
 .env
 .env.local
 .env.*.local
+.env.template
+.env.example
+
+# Azure connection/deployment configs (contain sensitive resource info)
+connection.yaml
+deploy-containerapp.ps1
+deploy-containerapp.sh
 
 # Python
 __pycache__/

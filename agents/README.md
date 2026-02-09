@@ -50,9 +50,9 @@ CUSTOM_VISION_ENDPOINT=https://your-cv.cognitiveservices.azure.com/customvision/
 CUSTOM_VISION_PROJECT_ID=your_project_id
 CUSTOM_VISION_ITERATION_NAME=Iteration4
 CUSTOM_VISION_PREDICTION_KEY=your_prediction_key
-AZURE_STORAGE_ACCOUNT_NAME=your_storage_account
-AZURE_STORAGE_ACCOUNT_KEY=your_storage_key
-AZURE_STORAGE_CONTAINER_NAME=health-insurance
+AZURE_STORAGE_ACCOUNT_NAME=fsidemo
+# AZURE_STORAGE_ACCOUNT_KEY not needed - using Managed Identity
+AZURE_STORAGE_CONTAINER_NAME=healthinsurance
 AZURE_STORAGE_XRAY_PATH=CLM001/xray
 ```
 

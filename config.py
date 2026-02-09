@@ -29,9 +29,9 @@ class AzureConfig:
 @dataclass
 class SearchIndicesConfig:
     """Azure AI Search indices configuration"""
-    billing_index: str = field(default_factory=lambda: os.getenv("AZURE_SEARCH_BILLING_INDEX", "clm001-folder1-index"))
-    medical_records_index: str = field(default_factory=lambda: os.getenv("AZURE_SEARCH_MEDICAL_INDEX", "clm001-folder3-index"))
-    exclusions_index: str = field(default_factory=lambda: os.getenv("AZURE_SEARCH_EXCLUSIONS_INDEX", "claims"))
+    billing_index: str = field(default_factory=lambda: os.getenv("AZURE_SEARCH_BILLING_INDEX", "healthbills"))
+    medical_records_index: str = field(default_factory=lambda: os.getenv("AZURE_SEARCH_MEDICAL_INDEX", "healthmedicalrecords"))
+    exclusions_index: str = field(default_factory=lambda: os.getenv("AZURE_SEARCH_EXCLUSIONS_INDEX", "healthclaims"))
 
 @dataclass
 class XRayConfig:
@@ -40,10 +40,10 @@ class XRayConfig:
     project_id: str = field(default_factory=lambda: os.getenv("CUSTOM_VISION_PROJECT_ID", ""))
     iteration_name: str = field(default_factory=lambda: os.getenv("CUSTOM_VISION_ITERATION_NAME", "Iteration4"))
     prediction_key: str = field(default_factory=lambda: os.getenv("CUSTOM_VISION_PREDICTION_KEY", ""))
-    storage_account_name: str = field(default_factory=lambda: os.getenv("AZURE_STORAGE_ACCOUNT_NAME", ""))
-    storage_account_key: str = field(default_factory=lambda: os.getenv("AZURE_STORAGE_ACCOUNT_KEY", ""))
+    storage_account_name: str = field(default_factory=lambda: os.getenv("AZURE_STORAGE_ACCOUNT_NAME", "fsidemo"))
+    storage_account_key: str = field(default_factory=lambda: os.getenv("AZURE_STORAGE_ACCOUNT_KEY", ""))  # Optional - use Managed Identity
     container_name: str = field(default_factory=lambda: os.getenv("AZURE_STORAGE_CONTAINER_NAME", "health-insurance"))
-    xray_path: str = field(default_factory=lambda: os.getenv("AZURE_STORAGE_XRAY_PATH", "CLM001/xray"))
+    xray_path: str = field(default_factory=lambda: os.getenv("AZURE_STORAGE_XRAY_PATH", "xray"))
 
 @dataclass
 class WorkflowConfig:

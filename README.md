@@ -75,7 +75,12 @@ HealthInsurance-ClaimsProcessing/
 │
 ├── 📄 requirements.txt        # Python dependencies
 ├── 📄 .env.example            # Environment variables template
-└── 📄 autogen_config.json     # AutoGen configuration
+├── 📄 autogen_config.json     # AutoGen configuration
+├── 🐳 Dockerfile.backend      # Backend API Docker image
+├── 🐳 Dockerfile.frontend     # Frontend multi-stage Docker image
+├── 📄 nginx.conf              # Nginx config for frontend container
+├── 📄 deploy-containerapp.ps1 # Azure Container Apps deployment (PowerShell)
+└── 📄 deploy-containerapp.sh  # Azure Container Apps deployment (Bash)
 ```
 
 ## 🚀 Quick Start
@@ -95,8 +100,8 @@ HealthInsurance-ClaimsProcessing/
 
 #### 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/HealthInsurance-ClaimsProcessing.git
-cd HealthInsurance-ClaimsProcessing
+git clone https://github.com/MSFT-Innovation-Hub-India/bfsi-multi-agent-health-insurance.git
+cd bfsi-multi-agent-health-insurance
 ```
 
 #### 2. Set up Python environment
@@ -158,10 +163,10 @@ CUSTOM_VISION_PROJECT_ID=your_project_id
 CUSTOM_VISION_ITERATION_NAME=Iteration4
 CUSTOM_VISION_PREDICTION_KEY=your_prediction_key
 
-# Azure Storage (for X-ray images)
-AZURE_STORAGE_ACCOUNT_NAME=your_storage_account
-AZURE_STORAGE_ACCOUNT_KEY=your_storage_key
-AZURE_STORAGE_CONTAINER_NAME=health-insurance
+# Azure Storage (for X-ray images) - Using Managed Identity
+AZURE_STORAGE_ACCOUNT_NAME=fsidemo
+# AZURE_STORAGE_ACCOUNT_KEY not needed - using Managed Identity
+AZURE_STORAGE_CONTAINER_NAME=healthinsurance
 ```
 
 ## 📊 How It Works
@@ -208,6 +213,160 @@ AZURE_STORAGE_CONTAINER_NAME=health-insurance
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+## ☁️ Deploying to Azure Container Apps
+
+This project includes production-ready Docker images and deployment scripts for **Azure Container Apps** with **Managed Identity** authentication.
+
+### Prerequisites
+
+- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) installed and logged in
+- [Docker](https://www.docker.com/get-started) installed and running
+- An **Azure Container Registry (ACR)** instance
+- An **Azure Container Apps Environment**
+- Azure services provisioned: Azure AI Search, Azure Cosmos DB, Azure Blob Storage, Azure OpenAI
+
+### Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    Azure Container Apps Environment                  │
+│                                                                      │
+│  ┌──────────────────────────┐    ┌──────────────────────────┐       │
+│  │  healthclaims-frontend   │    │    healthclaims-api       │       │
+│  │  (Nginx + React SPA)     │───▶│    (FastAPI + AutoGen)    │       │
+│  │  Port 80 · 0.25 vCPU     │    │    Port 8000 · 0.5 vCPU   │       │
+│  └──────────────────────────┘    └────────────┬─────────────┘       │
+│                                                │ Managed Identity    │
+│                                   ┌────────────┼────────────┐       │
+│                                   ▼            ▼            ▼       │
+│                            ┌──────────┐ ┌──────────┐ ┌──────────┐  │
+│                            │ Azure AI │ │ Cosmos   │ │  Blob    │  │
+│                            │ Search   │ │ DB       │ │ Storage  │  │
+│                            └──────────┘ └──────────┘ └──────────┘  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Docker Images
+
+| Image | Dockerfile | Description |
+|-------|-----------|-------------|
+| **healthclaims-api** | `Dockerfile.backend` | Python 3.11 slim image running FastAPI with Uvicorn |
+| **healthclaims-frontend** | `Dockerfile.frontend` | Multi-stage build: Node 20 builder → Nginx Alpine |
+
+### Step-by-Step Deployment
+
+#### 1. Configure your environment
+
+Create a `deploy-containerapp.ps1` (Windows) or `deploy-containerapp.sh` (Linux/macOS) with your Azure resource details:
+
+```bash
+# Key variables to configure
+RESOURCE_GROUP="your-resource-group"
+LOCATION="eastus2"
+ENVIRONMENT_NAME="your-container-apps-environment"
+ACR_NAME="your-acr-name"
+ACR_LOGIN_SERVER="your-acr-name.azurecr.io"
+```
+
+#### 2. Build and push Docker images
+
+```bash
+# Login to Azure Container Registry
+az acr login --name $ACR_NAME
+
+# Build and push backend
+docker build -t $ACR_LOGIN_SERVER/healthclaims-api:latest -f Dockerfile.backend .
+docker push $ACR_LOGIN_SERVER/healthclaims-api:latest
+
+# Build and push frontend (pass API URL as build arg)
+docker build -t $ACR_LOGIN_SERVER/healthclaims-frontend:latest -f Dockerfile.frontend \
+    --build-arg VITE_API_BASE_URL="https://healthclaims-api.eastus2.azurecontainerapps.io" .
+docker push $ACR_LOGIN_SERVER/healthclaims-frontend:latest
+```
+
+#### 3. Deploy the backend Container App
+
+```bash
+az containerapp create \
+    --name healthclaims-api \
+    --resource-group $RESOURCE_GROUP \
+    --environment $ENVIRONMENT_NAME \
+    --image $ACR_LOGIN_SERVER/healthclaims-api:latest \
+    --registry-server $ACR_LOGIN_SERVER \
+    --target-port 8000 \
+    --ingress external \
+    --min-replicas 0 --max-replicas 3 \
+    --cpu 0.5 --memory 1Gi \
+    --system-assigned \
+    --env-vars \
+        AZURE_ENDPOINT="https://eastus2.api.azureml.ms" \
+        COSMOS_ENDPOINT="https://your-cosmos.documents.azure.com:443/" \
+        COSMOS_DATABASE="HealthInsuranceClaims" \
+        COSMOS_USE_AAD="true"
+```
+
+#### 4. Assign Managed Identity roles
+
+The backend app uses **System-Assigned Managed Identity** — no secrets or API keys needed at runtime:
+
+```bash
+# Get the principal ID of the backend app
+BACKEND_PRINCIPAL_ID=$(az containerapp show \
+    --name healthclaims-api --resource-group $RESOURCE_GROUP \
+    --query identity.principalId --output tsv)
+
+# Azure AI Search — read index data
+az role assignment create --assignee-object-id $BACKEND_PRINCIPAL_ID \
+    --assignee-principal-type ServicePrincipal \
+    --role "Search Index Data Reader" \
+    --scope /subscriptions/$SUB/resourceGroups/$RG/providers/Microsoft.Search/searchServices/$SEARCH
+
+# Azure Blob Storage — read claim documents & X-rays
+az role assignment create --assignee-object-id $BACKEND_PRINCIPAL_ID \
+    --assignee-principal-type ServicePrincipal \
+    --role "Storage Blob Data Reader" \
+    --scope /subscriptions/$SUB/resourceGroups/$RG/providers/Microsoft.Storage/storageAccounts/$STORAGE
+
+# Azure Cosmos DB — read/write claims data
+az cosmosdb sql role assignment create \
+    --account-name $COSMOS_ACCOUNT --resource-group $RESOURCE_GROUP \
+    --principal-id $BACKEND_PRINCIPAL_ID \
+    --role-definition-name "Cosmos DB Built-in Data Contributor" --scope "/"
+```
+
+#### 5. Deploy the frontend Container App
+
+```bash
+az containerapp create \
+    --name healthclaims-frontend \
+    --resource-group $RESOURCE_GROUP \
+    --environment $ENVIRONMENT_NAME \
+    --image $ACR_LOGIN_SERVER/healthclaims-frontend:latest \
+    --registry-server $ACR_LOGIN_SERVER \
+    --target-port 80 \
+    --ingress external \
+    --min-replicas 0 --max-replicas 3 \
+    --cpu 0.25 --memory 0.5Gi
+```
+
+#### 6. Verify the deployment
+
+```bash
+# Get deployed URLs
+az containerapp show --name healthclaims-api --resource-group $RESOURCE_GROUP \
+    --query properties.configuration.ingress.fqdn --output tsv
+
+az containerapp show --name healthclaims-frontend --resource-group $RESOURCE_GROUP \
+    --query properties.configuration.ingress.fqdn --output tsv
+```
+
+After deployment you will have:
+- **Frontend**: `https://healthclaims-frontend.<region>.azurecontainerapps.io`
+- **Backend API**: `https://healthclaims-api.<region>.azurecontainerapps.io`
+- **API Docs (Swagger)**: `https://healthclaims-api.<region>.azurecontainerapps.io/docs`
+
+> **Tip:** The deployment scripts (`deploy-containerapp.ps1` / `.sh`) automate all of the above steps. Copy the template, fill in your resource names, and run.
+
 ## 🔧 Technologies
 
 | Component | Technology |
@@ -217,7 +376,10 @@ AZURE_STORAGE_CONTAINER_NAME=health-insurance
 | **Document Search** | Azure AI Search |
 | **Image Analysis** | Azure Custom Vision |
 | **Storage** | Azure Blob Storage |
-| **Backend** | Python 3.9+ |
+| **Hosting** | Azure Container Apps |
+| **Containers** | Docker (multi-stage builds) |
+| **Identity** | Azure Managed Identity (passwordless) |
+| **Backend** | Python 3.11, FastAPI, Uvicorn |
 | **Frontend** | React 19, TypeScript, Vite |
 | **Styling** | TailwindCSS |
 | **Animation** | Framer Motion |
