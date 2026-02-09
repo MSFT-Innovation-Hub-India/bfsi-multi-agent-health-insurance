@@ -503,13 +503,6 @@ print(f"Approved Amount: ₹{result.approved_amount:,.2f}")
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## 🔒 Security Notes
-
-- ⚠️ **Never commit `.env` files** with real credentials
-- 🔐 Use **Azure Key Vault** for production deployments
-- 🔄 **Rotate API keys** regularly
-- 🛡️ Enable **Azure AD authentication** for production
-- 📋 Follow **HIPAA compliance** guidelines for health data
 
 ## 🧪 Testing
 
@@ -524,10 +517,6 @@ import asyncio
 asyncio.run(HealthInsuranceClaimSystem().process_claim_with_fraud_detection())
 "
 ```
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details.
 
 ## 🤝 Contributing
 
