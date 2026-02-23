@@ -20,6 +20,10 @@ COPY agents/ ./agents/
 COPY config.py .
 COPY orchestrator.py .
 COPY workflow_manager.py .
+COPY seed_cosmos.py .
+COPY run_fraud_detection.py .
+COPY connection.yaml .
+COPY autogen_config.json .
 
 # Expose port
 EXPOSE 8000

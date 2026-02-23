@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ClaimOverview } from './ClaimOverview';
 import { EvidenceAnalysis } from './EvidenceAnalysis';
 import { SystemStatusPanel } from './SystemStatus';
@@ -11,7 +11,7 @@ import {
   Activity,
   Shield
 } from 'lucide-react';
-import { getLogDataForClaim } from '@/utils/logLoader';
+import { fetchLogDataForClaim, getLogDataForClaim, LogData } from '@/utils/logLoader';
 
 interface ClaimAnalysisPageProps {
   claimId: string;
@@ -19,8 +19,25 @@ interface ClaimAnalysisPageProps {
 }
 
 export const ClaimAnalysisPage: React.FC<ClaimAnalysisPageProps> = ({ claimId, onBack }) => {
-  // Load the appropriate log data based on claim ID
-  const logData = getLogDataForClaim(claimId);
+  // Start with static fallback, then fetch from Cosmos DB API
+  const [logData, setLogData] = useState<LogData>(getLogDataForClaim(claimId));
+  const [, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setIsLoading(true);
+    fetchLogDataForClaim(claimId, controller.signal)
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          setLogData(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        // Swallow AbortError from cleanup
+      });
+    return () => { controller.abort(); };
+  }, [claimId]);
   
   // Extract data from logData
   const patientDetails = logData.patient_details;

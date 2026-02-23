@@ -1,33 +1,38 @@
-// Azure Storage configuration
-const STORAGE_ACCOUNT_NAME = 'fsidemo';
-const CONTAINER_NAME = 'healthinsurance';
-const BASE_URL = `https://${STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${CONTAINER_NAME}`;
-
-// For production: Generate a SAS token from Azure Portal with read permissions
-// and append it to all URLs. For now, we'll use public access.
-// Example SAS token format: ?sv=2021-06-08&ss=b&srt=sco&sp=r&se=2025-12-31T23:59:59Z&st=2025-01-01T00:00:00Z&spr=https&sig=...
-const SAS_TOKEN = ''; // Add your SAS token here if not using public access
+// Azure Storage - proxied through backend API (AAD auth)
+// The backend fetches blobs using DefaultAzureCredential since
+// the storage account has public access and SAS disabled.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 /**
- * Get document URL for a specific file
+ * Get document URL routed through the backend proxy
  * @param claimId - The claim ID (folder name in storage)
- * @param fileName - The PDF file name
- * @returns The full URL to the document
+ * @param fileName - The file name
+ * @returns The proxy URL
  */
 export async function getDocumentUrl(claimId: string, fileName: string): Promise<string> {
-  const blobUrl = `${BASE_URL}/${claimId}/${fileName}`;
-  return SAS_TOKEN ? `${blobUrl}${SAS_TOKEN}` : blobUrl;
+  return `${API_BASE_URL}/api/documents/${encodeURIComponent(claimId)}/${encodeURIComponent(fileName)}`;
 }
 
 /**
- * List all documents for a specific claim ID
- * For browser compatibility, we'll use a predefined list
+ * List all documents for a specific claim ID from the backend
  * @param claimId - The claim ID
  * @returns Promise with array of document file names
  */
 export async function listClaimDocuments(claimId: string): Promise<string[]> {
-  // Since we can't list blobs from the browser without the SDK,
-  // we'll return a predefined list based on claim ID
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/documents/${encodeURIComponent(claimId)}`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    if (response.ok) {
+      const data = await response.json();
+      return data.documents || [];
+    }
+  } catch {
+    console.warn(`Failed to list documents for ${claimId} from API, using fallback`);
+  }
+
+  // Fallback: hardcoded list
   const documentMap: { [key: string]: string[] } = {
     'CLM001-2024-LAKSHMI': [
       'Bill-Blood-Bank-1 1.pdf',

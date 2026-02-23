@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Query, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, Response
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
@@ -294,7 +294,42 @@ async def get_latest_claim_log(claim_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/claims/{claim_id}/logs/by-id/{log_id}")
+async def get_claim_log_by_id(claim_id: str, log_id: str):
+    """Get a specific agent processing log by its document ID"""
+    try:
+        cosmos_service = get_cosmos_service()
+        log = cosmos_service.get_agent_log_by_id(log_id, claim_id)
+        if log is None:
+            raise HTTPException(status_code=404, detail=f"Log {log_id} not found for claim {claim_id}")
+        return {
+            "success": True,
+            "claim_id": claim_id,
+            "log": log
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ==================== REAL-TIME PROCESSING ENDPOINTS ====================
+
+async def _run_agents_in_background(claim_data: Dict[str, Any]):
+    """
+    Background task: runs the full agent pipeline and stores results in Cosmos DB.
+    Called by the POST /api/process/{claim_id} endpoint so the frontend can fire-and-forget.
+    """
+    claim_id = claim_data.get("claim_id", "unknown")
+    try:
+        processor = get_realtime_processor()
+        print(f"⚙️ Background processing started for claim: {claim_id}")
+        async for update in processor.process_claim_realtime(claim_data, {}):
+            print(f"   [{update.agent_name}] {update.status.value}: {update.message}")
+        print(f"✅ Background processing completed for claim: {claim_id}")
+    except Exception as e:
+        print(f"❌ Background processing failed for claim {claim_id}: {e}")
+
 
 @app.post("/api/process/{claim_id}")
 async def start_processing(claim_id: str, background_tasks: BackgroundTasks):
@@ -322,6 +357,9 @@ async def start_processing(claim_id: str, background_tasks: BackgroundTasks):
         session = cosmos_service.create_processing_session(claim_id)
         
         print(f"🚀 Processing started for claim: {claim_id}, session: {session['session_id']}")
+        
+        # Run agent pipeline in background — fire and forget
+        background_tasks.add_task(_run_agents_in_background, claim)
         
         return {
             "success": True,
@@ -487,6 +525,122 @@ async def get_storage_config():
         "container_name": os.getenv("AZURE_STORAGE_CONTAINER_NAME", "healthinsurance"),
         "base_url": f"https://{os.getenv('AZURE_STORAGE_ACCOUNT_NAME', 'fsidemo')}.blob.core.windows.net/{os.getenv('AZURE_STORAGE_CONTAINER_NAME', 'healthinsurance')}"
     }
+
+
+# ==================== DOCUMENT PROXY ENDPOINTS ====================
+
+# Known documents per claim (mirrors the frontend mapping)
+CLAIM_DOCUMENTS: Dict[str, List[str]] = {
+    "CLM001-2024-LAKSHMI": [
+        "Bill-Blood-Bank-1 1.pdf",
+        "Discharge-Summary.pdf",
+        "Investigation-Surgery_compressed.pdf",
+        "kneexray aftersurgery.jpg",
+        "kneexray beforesurgery.jpg",
+    ],
+    "CLM010-2025-AHSAN": [
+        "Bill-Blood-Bank-1 1.pdf",
+        "Discharge-Summary_compressed.pdf",
+    ],
+}
+
+# ---- Cached Azure credential & container client (singleton) ----
+_blob_credential = None
+_blob_container_client = None
+
+
+def _get_blob_credential():
+    """Return a cached DefaultAzureCredential (avoids re-probing auth sources per request)."""
+    global _blob_credential
+    if _blob_credential is None:
+        from azure.identity import DefaultAzureCredential
+        _blob_credential = DefaultAzureCredential()
+        print("🔑 DefaultAzureCredential cached")
+    return _blob_credential
+
+
+def _get_container_client():
+    """Return a cached ContainerClient for the health-insurance documents container."""
+    global _blob_container_client
+    if _blob_container_client is None:
+        from azure.storage.blob import ContainerClient
+        account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME", "fsidemo")
+        # Documents live in 'healthinsurance' (no hyphen), NOT 'health-insurance'
+        container_name = "healthinsurance"
+        account_url = f"https://{account_name}.blob.core.windows.net"
+        _blob_container_client = ContainerClient(
+            account_url=account_url,
+            container_name=container_name,
+            credential=_get_blob_credential(),
+        )
+        print(f"📦 ContainerClient cached: {account_name}/{container_name}")
+    return _blob_container_client
+
+
+@app.get("/api/documents/{claim_id}")
+async def list_claim_documents(claim_id: str):
+    """List available documents for a claim"""
+    docs = CLAIM_DOCUMENTS.get(claim_id, [])
+    return {"claim_id": claim_id, "documents": docs}
+
+
+@app.get("/api/documents/{claim_id}/{file_name:path}")
+async def get_document(claim_id: str, file_name: str):
+    """
+    Proxy endpoint to fetch a document from Azure Blob Storage using AAD auth.
+    Streams the blob content back to the browser in chunks for fast first-byte delivery.
+    Uses a cached credential + container client to avoid re-auth on every request.
+    """
+    from urllib.parse import unquote
+    decoded_file_name = unquote(file_name)
+    blob_path = f"{claim_id}/{decoded_file_name}"
+    print(f"📄 Document request: blob_path={blob_path!r}")
+
+    # Determine content type from extension
+    name_lower = file_name.lower()
+    if name_lower.endswith(".pdf"):
+        content_type = "application/pdf"
+    elif name_lower.endswith((".jpg", ".jpeg")):
+        content_type = "image/jpeg"
+    elif name_lower.endswith(".png"):
+        content_type = "image/png"
+    else:
+        content_type = "application/octet-stream"
+
+    try:
+        container_client = _get_container_client()
+        blob_client = container_client.get_blob_client(blob_path)
+
+        # Start the download (lazy — data is fetched as we iterate chunks)
+        loop = asyncio.get_event_loop()
+        download = await loop.run_in_executor(None, blob_client.download_blob)
+        blob_size = download.properties.size
+
+        # Yield blob data in chunks so the browser starts rendering immediately
+        def _iter_chunks():
+            for chunk in download.chunks():
+                yield chunk
+
+        headers = {
+            "Content-Disposition": f'inline; filename="{decoded_file_name}"',
+            "Cache-Control": "public, max-age=3600",
+        }
+        if blob_size:
+            headers["Content-Length"] = str(blob_size)
+
+        return StreamingResponse(
+            _iter_chunks(),
+            media_type=content_type,
+            headers=headers,
+        )
+    except Exception as e:
+        error_msg = str(e)
+        print(f"❌ Blob fetch error for {blob_path}: {error_msg}")
+        if "BlobNotFound" in error_msg:
+            raise HTTPException(status_code=404, detail=f"Document not found: {blob_path}")
+        if "AuthorizationPermissionMismatch" in error_msg or "AuthorizationFailure" in error_msg or "403" in error_msg:
+            raise HTTPException(status_code=403, detail=f"No permission to access blob. Ensure your Azure AD identity has 'Storage Blob Data Reader' role on the storage account.")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch document: {error_msg}")
 
 
 # ==================== RUN SERVER ====================

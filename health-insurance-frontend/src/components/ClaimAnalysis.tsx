@@ -19,13 +19,15 @@ interface ClaimAnalysisProps {
   claimAnalysis: ClaimAnalysisType;
   agentMetrics: AgentMetrics;
   onClaimClick: (claimId: string) => void;
+  onProcessedClaimClick?: (claimId: string) => void;
 }
 
 export const ClaimAnalysis: React.FC<ClaimAnalysisProps> = ({ 
   claims, 
   claimAnalysis, 
   agentMetrics,
-  onClaimClick 
+  onClaimClick,
+  onProcessedClaimClick
 }) => {
   const [documentViewerClaimId, setDocumentViewerClaimId] = useState<string | null>(null);
 
@@ -215,7 +217,13 @@ export const ClaimAnalysis: React.FC<ClaimAnalysisProps> = ({
               <div
                 key={claim.id}
                 className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                onClick={() => onClaimClick(claim.id)}
+                onClick={() => {
+                  if (claim.status === 'ACCEPTED' && onProcessedClaimClick) {
+                    onProcessedClaimClick(claim.id);
+                  } else {
+                    onClaimClick(claim.id);
+                  }
+                }}
               >
                 <div className="flex items-center gap-4">
                   <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full">

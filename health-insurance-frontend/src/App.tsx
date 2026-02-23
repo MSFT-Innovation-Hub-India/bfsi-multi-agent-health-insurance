@@ -1,62 +1,80 @@
 // Health Insurance Claims - App.tsx
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
 import InsurerDashboard from './InsurerDashboard';
 import { MultiAgentWorkflowPipeline } from './components/MultiAgentWorkflowPipeline';
 import { ClaimAnalysisPage } from './components/ClaimAnalysisPage';
 import { triggerProcessing } from './api/processingTrigger';
 
-function App() {
-  const [currentView, setCurrentView] = useState<'dashboard' | 'workflow' | 'overview'>('dashboard');
-  const [selectedClaimId, setSelectedClaimId] = useState<string>('');
+// Wrapper components that read URL params and wire up navigation
 
-  // Scroll to top whenever view changes
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [currentView]);
+function DashboardPage() {
+  const navigate = useNavigate();
 
   const handleClaimClick = (claimId: string) => {
-    setSelectedClaimId(claimId);
-    setCurrentView('workflow');
-    
     // Fire and forget - trigger processing API in background
-    // Frontend continues using static JSON for display
     triggerProcessing(claimId);
+    navigate(`/claims/${claimId}/workflow`);
   };
 
-  const handleBackToDashboard = () => {
-    setCurrentView('dashboard');
-    setSelectedClaimId('');
+  const handleProcessedClaimClick = (claimId: string) => {
+    navigate(`/claims/${claimId}/workflow?processed=true`);
   };
-
-  const handleViewDetails = () => {
-    setCurrentView('overview');
-  };
-
-  const handleBackToWorkflow = () => {
-    setCurrentView('workflow');
-  };
-
-  if (currentView === 'overview') {
-    return (
-      <ClaimAnalysisPage 
-        claimId={selectedClaimId} 
-        onBack={handleBackToWorkflow} 
-      />
-    );
-  }
-
-  if (currentView === 'workflow') {
-    return (
-      <MultiAgentWorkflowPipeline 
-        claimId={selectedClaimId} 
-        onBack={handleBackToDashboard}
-        onReviewApprove={handleViewDetails}
-      />
-    );
-  }
 
   return (
-    <InsurerDashboard onClaimClick={handleClaimClick} />
+    <InsurerDashboard
+      onClaimClick={handleClaimClick}
+      onProcessedClaimClick={handleProcessedClaimClick}
+    />
+  );
+}
+
+function WorkflowPage() {
+  const { claimId } = useParams<{ claimId: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isPreProcessed = new URLSearchParams(location.search).get('processed') === 'true';
+
+  if (!claimId) return null;
+
+  return (
+    <MultiAgentWorkflowPipeline
+      claimId={claimId}
+      onBack={() => navigate('/')}
+      onReviewApprove={() => navigate(`/claims/${claimId}/analysis`)}
+      isPreProcessed={isPreProcessed}
+    />
+  );
+}
+
+function AnalysisPage() {
+  const { claimId } = useParams<{ claimId: string }>();
+  const navigate = useNavigate();
+
+  if (!claimId) return null;
+
+  return (
+    <ClaimAnalysisPage
+      claimId={claimId}
+      onBack={() => navigate(`/claims/${claimId}/workflow`)}
+    />
+  );
+}
+
+function App() {
+  const location = useLocation();
+
+  // Scroll to top whenever route changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [location.pathname]);
+
+  return (
+    <Routes>
+      <Route path="/" element={<DashboardPage />} />
+      <Route path="/claims/:claimId/workflow" element={<WorkflowPage />} />
+      <Route path="/claims/:claimId/analysis" element={<AnalysisPage />} />
+    </Routes>
   );
 }
 

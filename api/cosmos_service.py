@@ -195,6 +195,22 @@ class CosmosDBService:
         
         return self.logs_container.upsert_item(log_data)
     
+    def get_agent_log_by_id(self, log_id: str, claim_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get a specific agent log by its ID
+        
+        Args:
+            log_id: The log document ID
+            claim_id: The claim ID (partition key)
+            
+        Returns:
+            The log data or None if not found
+        """
+        try:
+            return self.logs_container.read_item(item=log_id, partition_key=claim_id)
+        except exceptions.CosmosResourceNotFoundError:
+            return None
+
     def get_agent_logs(self, claim_id: str) -> List[Dict[str, Any]]:
         """
         Get all agent logs for a claim

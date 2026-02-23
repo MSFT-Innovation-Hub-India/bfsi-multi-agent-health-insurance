@@ -194,6 +194,18 @@
       "fraudIndicators": []
     },
     {
+      "id": "CLM001-2024-LAKSHMI-APPROVED",
+      "patientId": "PAT001",
+      "patientName": "Lakshmisrinivas T",
+      "claimAmount": 392117.0,
+      "status": "ACCEPTED",
+      "submissionDate": "2024-09-16",
+      "processingTime": 48.3,
+      "agentsUsed": 6,
+      "riskScore": 8,
+      "fraudIndicators": []
+    },
+    {
       "id": "CLM010-2025-AHSAN",
       "patientId": "PAT016",
       "patientName": "Ahsan R",

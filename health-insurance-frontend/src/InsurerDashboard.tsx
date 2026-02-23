@@ -20,9 +20,10 @@ import dashboardData from './dashboard-data.json';
 
 interface InsurerDashboardProps {
   onClaimClick: (claimId: string) => void;
+  onProcessedClaimClick?: (claimId: string) => void;
 }
 
-function InsurerDashboard({ onClaimClick }: InsurerDashboardProps) {
+function InsurerDashboard({ onClaimClick, onProcessedClaimClick }: InsurerDashboardProps) {
   const [data] = useState<InsuranceDashboardData>(dashboardData as InsuranceDashboardData);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
@@ -138,6 +139,7 @@ function InsurerDashboard({ onClaimClick }: InsurerDashboardProps) {
               claimAnalysis={data.claimAnalysis}
               agentMetrics={data.agentMetrics}
               onClaimClick={onClaimClick}
+              onProcessedClaimClick={onProcessedClaimClick}
             />
           </TabsContent>
         </Tabs>

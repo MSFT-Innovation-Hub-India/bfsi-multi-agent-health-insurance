@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 interface AgentConversationProps {
-  messages: string[];
+  messages: (string | Record<string, unknown>)[];
   conversationDuration: number;
   totalAgents: number;
 }
@@ -26,24 +26,38 @@ export const AgentConversation: React.FC<AgentConversationProps> = ({
   const [expandedMessage, setExpandedMessage] = useState<number | null>(null);
 
   // Parse the message strings to extract agent information
-  const parseMessages = (messages: string[]): AgentMessage[] => {
+  const parseMessages = (messages: (string | Record<string, unknown>)[]): AgentMessage[] => {
     return messages.map((msgStr, index) => {
+      // If it's already an object, use it directly
+      if (typeof msgStr === 'object' && msgStr !== null) {
+        return {
+          content: String(msgStr.content || ''),
+          role: String(msgStr.role || 'user'),
+          name: String(msgStr.name || 'Unknown'),
+          timestamp: new Date(Date.now() + index * 1000).toISOString()
+        };
+      }
       try {
-        // Remove the outer quotes and parse the JSON-like string
-        const cleanStr = msgStr.replace(/^'|'$/g, '');
-        const parsed = JSON.parse(cleanStr);
+        // Try standard JSON parse first
+        const parsed = JSON.parse(msgStr);
         return {
           content: parsed.content,
           role: parsed.role,
           name: parsed.name,
           timestamp: new Date(Date.now() + index * 1000).toISOString()
         };
-      } catch (error) {
-        // Fallback for malformed messages
+      } catch {
+        // Handle Python dict format (single-quoted keys/values)
+        const nameMatch = msgStr.match(/'name':\s*'([^']+)'/);
+        const roleMatch = msgStr.match(/'role':\s*'([^']+)'/);
+        const contentDblMatch = msgStr.match(/'content':\s*"([\s\S]*?)",\s*'(?:role|name)'/);
+        const contentSnglMatch = msgStr.match(/'content':\s*'([\s\S]*?)',\s*'(?:role|name)'/);
+        const content = contentDblMatch ? contentDblMatch[1] : (contentSnglMatch ? contentSnglMatch[1] : msgStr);
+
         return {
-          content: msgStr,
-          role: 'system',
-          name: 'System',
+          content,
+          role: roleMatch ? roleMatch[1] : 'system',
+          name: nameMatch ? nameMatch[1] : 'System',
           timestamp: new Date(Date.now() + index * 1000).toISOString()
         };
       }

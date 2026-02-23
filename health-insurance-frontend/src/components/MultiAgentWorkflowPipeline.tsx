@@ -22,12 +22,13 @@ import {
 import { RupeeIcon } from '@/components/ui/rupee-icon';
 import { AgentMessage, parseAgentMessages, formatAgentName, extractSummary } from '@/utils/agentParser';
 import { AgentModal } from './AgentModal';
-import { getLogDataForClaim } from '@/utils/logLoader';
+import { fetchLogDataForClaim, getLogDataForClaim, LogData } from '@/utils/logLoader';
 
 interface MultiAgentWorkflowPipelineProps {
   claimId: string;
   onBack: () => void;
   onReviewApprove?: () => void;
+  isPreProcessed?: boolean;
 }
 
 // Agent workflow stages configuration
@@ -117,20 +118,45 @@ const getAgentDescription = (agentName: string): string => {
 export const MultiAgentWorkflowPipeline: React.FC<MultiAgentWorkflowPipelineProps> = ({ 
   claimId, 
   onBack, 
-  onReviewApprove 
+  onReviewApprove,
+  isPreProcessed = false
 }) => {
-  // Load the appropriate log data based on claim ID
-  const logData = getLogDataForClaim(claimId);
-  
+  // Load log data from Cosmos DB API with static JSON fallback
+  const [logData, setLogData] = useState<LogData>(getLogDataForClaim(claimId));
+  const [, setIsDataLoading] = useState(true);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setIsDataLoading(true);
+    fetchLogDataForClaim(claimId, controller.signal)
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          setLogData(data);
+          setIsDataLoading(false);
+        }
+      })
+      .catch(() => {
+        // Swallow AbortError from cleanup
+      });
+    return () => { controller.abort(); };
+  }, [claimId]);
+
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [agentStatuses, setAgentStatuses] = useState<{ [key: string]: AgentStatus }>({});
   const [isProcessing, setIsProcessing] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<AgentMessage | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [allMessages] = useState<AgentMessage[]>(
+  const [allMessages, setAllMessages] = useState<AgentMessage[]>(
     parseAgentMessages(logData?.fraud_analysis_results?.fraud_orchestration?.detailed_messages || [])
   );
+
+  // Update messages when logData changes (e.g. after API fetch completes)
+  useEffect(() => {
+    setAllMessages(
+      parseAgentMessages(logData?.fraud_analysis_results?.fraud_orchestration?.detailed_messages || [])
+    );
+  }, [logData]);
 
   // Initialize agent statuses and reset workflow
   useEffect(() => {
@@ -139,26 +165,34 @@ export const MultiAgentWorkflowPipeline: React.FC<MultiAgentWorkflowPipelineProp
       stage.agents.forEach(agentName => {
         initialStatuses[agentName] = {
           name: agentName,
-          status: 'pending',
-          progress: 0
+          status: isPreProcessed ? 'completed' : 'pending',
+          progress: isPreProcessed ? 100 : 0,
+          ...(isPreProcessed ? { startTime: Date.now(), endTime: Date.now() } : {})
         };
       });
     });
     setAgentStatuses(initialStatuses);
-    setCurrentStageIndex(0);
-    setIsProcessing(true);
+    if (isPreProcessed) {
+      setCurrentStageIndex(WORKFLOW_STAGES.length); // all done
+      setIsProcessing(false);
+    } else {
+      setCurrentStageIndex(0);
+      setIsProcessing(true);
+    }
     setIsPaused(false);
-  }, [claimId]); // Reset when claimId changes
+  }, [claimId, isPreProcessed]); // Reset when claimId or mode changes
 
   // Workflow progression logic
   useEffect(() => {
-    console.log(`Stage ${currentStageIndex + 1}: Starting workflow stage`, WORKFLOW_STAGES[currentStageIndex]?.name);
-    
     if (isPaused || currentStageIndex >= WORKFLOW_STAGES.length) {
-      console.log('Workflow completed or paused');
+      if (currentStageIndex >= WORKFLOW_STAGES.length) {
+        console.log('Workflow completed');
+      }
       setIsProcessing(false);
       return;
     }
+
+    console.log(`Stage ${currentStageIndex + 1}: Starting workflow stage`, WORKFLOW_STAGES[currentStageIndex].name);
 
     const currentStage = WORKFLOW_STAGES[currentStageIndex];
     const stageAgents = currentStage.agents;

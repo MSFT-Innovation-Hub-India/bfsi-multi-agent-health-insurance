@@ -4,8 +4,18 @@ export interface AgentMessage {
   name: string;
 }
 
-export const parseAgentMessages = (detailedMessages: string[]): AgentMessage[] => {
+export const parseAgentMessages = (detailedMessages: (string | AgentMessage)[]): AgentMessage[] => {
   return detailedMessages.map(messageStr => {
+    // If it's already an object (not a string), use it directly
+    if (typeof messageStr === 'object' && messageStr !== null) {
+      const obj = messageStr as unknown as Record<string, unknown>;
+      return {
+        content: String(obj.content || ''),
+        role: String(obj.role || 'user'),
+        name: String(obj.name || 'Unknown')
+      };
+    }
+
     try {
       // Handle the JSON string format from the log
       let cleanStr = messageStr;
@@ -21,21 +31,56 @@ export const parseAgentMessages = (detailedMessages: string[]): AgentMessage[] =
         .replace(/\\n/g, '\n')
         .replace(/\\'/g, "'");
       
-      const parsed = JSON.parse(cleanStr);
-      return {
-        content: parsed.content,
-        role: parsed.role,
-        name: parsed.name
-      };
+      // Try standard JSON parse first
+      try {
+        const parsed = JSON.parse(cleanStr);
+        return {
+          content: parsed.content,
+          role: parsed.role,
+          name: parsed.name
+        };
+      } catch {
+        // If standard JSON fails, try converting Python dict format (single quotes) to JSON
+        // Extract fields using robust regex that handles content with single quotes
+        const nameMatch = cleanStr.match(/'name':\s*'([^']+)'/);
+        const roleMatch = cleanStr.match(/'role':\s*'([^']+)'/);
+        
+        // Extract content between 'content': ' or 'content': " and the next , 'role' or , 'name'
+        let content = '';
+        const contentDblQuoteMatch = cleanStr.match(/'content':\s*"([\s\S]*?)",\s*'(?:role|name)'/);
+        const contentSnglQuoteMatch = cleanStr.match(/'content':\s*'([\s\S]*?)',\s*'(?:role|name)'/);
+        
+        if (contentDblQuoteMatch) {
+          content = contentDblQuoteMatch[1];
+        } else if (contentSnglQuoteMatch) {
+          content = contentSnglQuoteMatch[1];
+        } else {
+          // Last resort: grab everything between 'content': and , 'role'|, 'name'}
+          const fallbackMatch = cleanStr.match(/'content':\s*['"]?([\s\S]*?)['"]?,\s*'(?:role|name)'/);
+          if (fallbackMatch) {
+            content = fallbackMatch[1];
+          }
+        }
+        
+        if (nameMatch && content) {
+          return {
+            content,
+            role: roleMatch ? roleMatch[1] : 'user',
+            name: nameMatch[1]
+          };
+        }
+        
+        throw new Error('Could not parse Python dict format');
+      }
     } catch (error) {
-      console.error('Error parsing message:', error, messageStr);
+      console.error('Error parsing message:', error, typeof messageStr === 'string' ? messageStr.substring(0, 100) + '...' : messageStr);
       
-      // Try to extract basic info if JSON parsing fails
-      const nameMatch = messageStr.match(/'name':\s*'([^']+)'/);
-      const contentMatch = messageStr.match(/'content':\s*'([^']+(?:'[^']*'[^']*)*?)'/);
+      // Final fallback
+      const str = String(messageStr);
+      const nameMatch = str.match(/'name':\s*'([^']+)'/);
       
       return {
-        content: contentMatch ? contentMatch[1] : messageStr,
+        content: str,
         role: 'user',
         name: nameMatch ? nameMatch[1] : 'Parser_Error'
       };
