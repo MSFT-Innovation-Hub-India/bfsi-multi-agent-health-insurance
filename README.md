@@ -344,7 +344,37 @@ After deployment you will have:
 - **Backend API**: `https://healthclaims-api.<region>.azurecontainerapps.io`
 - **API Docs (Swagger)**: `https://healthclaims-api.<region>.azurecontainerapps.io/docs`
 
-## 🔧 Technologies
+## � Azure AI Search Index Setup
+
+Before running the system, three Azure AI Search indexes must be created — one for each document category:
+
+| Index | Blob Folder |
+|---|---|
+| Bills Index | `CUST{id}/bills/` |
+| Claims / Exclusions / Inclusions Index | `CUST{id}/claims-exclusions-inclusions/` |
+| Diagnostic Data Index | `CUST{id}/diagnostic-data/` |
+
+### Option A — Python Script (recommended)
+
+Configure `.env` and run the script for each index:
+
+```bash
+cd Index-Creation
+cp .env.template .env   # fill in your Azure credentials
+python create_index.py  # interactive mode
+```
+
+See [`Index-Creation/README.md`](Index-Creation/README.md) for full setup instructions.
+
+### Option B — Azure Portal
+
+Use the **Import and vectorize data** wizard in Azure AI Search, pointing to the corresponding Blob folder for each index.
+
+See [`index-creation-portal/index_setup-portal.md`](index-creation-portal/index_setup-portal.md) for step-by-step guidance.
+
+---
+
+## �🔧 Technologies
 
 | Component | Technology |
 |-----------|------------|
