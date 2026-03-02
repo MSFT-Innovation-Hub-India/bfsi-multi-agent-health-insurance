@@ -10,6 +10,13 @@ connection.yaml
 deploy-containerapp.ps1
 deploy-containerapp.sh
 
+# Scripts - ignore everything except networking scripts
+scripts/*
+!scripts/enable-azure-networking.ps1
+!scripts/enable-azure-networking.cmd
+!scripts/azure-config.example.env
+!scripts/HOW-TO-RUN.md
+
 # Python
 __pycache__/
 *.py[cod]
